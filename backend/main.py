@@ -4,19 +4,31 @@ from models import JDInput
 from parser import parse_jd
 from scorer import calculate_match_score
 import json
+import os
 
 app = FastAPI(title="ScoutX AI")
 
+# ---------------------------------------------------
+# CORS (Hackathon-safe: allow all origins temporarily)
+# ---------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000"
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ---------------------------------------------------
+# Basic Routes
+# ---------------------------------------------------
+@app.get("/")
+def home():
+    return {
+        "message": "ScoutX AI Backend Live",
+        "health": "/health",
+        "docs": "/docs"
+    }
 
 
 @app.get("/health")
@@ -29,7 +41,10 @@ def analyze_jd(data: JDInput):
     return parse_jd(data.job_description)
 
 
-def get_interest_score(persona):
+# ---------------------------------------------------
+# Interest Scoring
+# ---------------------------------------------------
+def get_interest_score(persona: str):
     p = persona.lower()
 
     if "actively exploring" in p:
@@ -52,7 +67,10 @@ def get_interest_score(persona):
     return 60
 
 
-def get_reply(persona):
+# ---------------------------------------------------
+# Candidate Reply Simulation
+# ---------------------------------------------------
+def get_reply(persona: str):
     p = persona.lower()
 
     if "actively exploring" in p:
@@ -91,12 +109,33 @@ def get_reply(persona):
     )
 
 
+# ---------------------------------------------------
+# Load Dataset Safely
+# ---------------------------------------------------
+def load_candidates():
+    current_dir = os.path.dirname(__file__)
+
+    possible_paths = [
+        os.path.join(current_dir, "../dataset/candidates.json"),
+        os.path.join(current_dir, "dataset/candidates.json"),
+        os.path.join(os.getcwd(), "dataset/candidates.json")
+    ]
+
+    for path in possible_paths:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+
+    return []
+
+
+# ---------------------------------------------------
+# Main Matching Endpoint
+# ---------------------------------------------------
 @app.post("/match-candidates")
 def match_candidates(data: JDInput):
     parsed = parse_jd(data.job_description)
-
-    with open("../dataset/candidates.json", "r", encoding="utf-8") as f:
-        candidates = json.load(f)
+    candidates = load_candidates()
 
     results = []
 
@@ -105,7 +144,8 @@ def match_candidates(data: JDInput):
         interest_score = get_interest_score(candidate["persona"])
 
         final_score = round(
-            (match_score * 0.7) + (interest_score * 0.3), 2
+            (match_score * 0.7) + (interest_score * 0.3),
+            2
         )
 
         reply_text, status = get_reply(candidate["persona"])
@@ -122,14 +162,21 @@ def match_candidates(data: JDInput):
         reasons = []
 
         if overlap:
-            reasons.append("Skill match: " + ", ".join(overlap[:3]))
+            reasons.append(
+                "Skill match: " + ", ".join(overlap[:3])
+            )
 
-        if candidate["experience_years"] >= parsed["experience"] and parsed["experience"] > 0:
+        if (
+            parsed["experience"] > 0 and
+            candidate["experience_years"] >= parsed["experience"]
+        ):
             reasons.append(
                 f"{candidate['experience_years']} years relevant experience"
             )
 
-        reasons.append(f"Persona: {candidate['persona']}")
+        reasons.append(
+            f"Persona: {candidate['persona']}"
+        )
 
         if final_score >= 85:
             priority = "Hot Lead"
@@ -155,7 +202,11 @@ def match_candidates(data: JDInput):
             "engagement_status": status
         })
 
-    ranked = sorted(results, key=lambda x: x["final_score"], reverse=True)
+    ranked = sorted(
+        results,
+        key=lambda x: x["final_score"],
+        reverse=True
+    )
 
     return {
         "parsed_jd": parsed,
