@@ -39,49 +39,36 @@ ScoutX AI automatically:
 
 ---
 # ScoutX AI Architecture
+## Architecture Diagram
 
-                ┌──────────────────────┐
-                │   Recruiter Inputs   │
-                │  Job Description JD  │
-                └──────────┬───────────┘
-                           │
-                           ▼
-                ┌──────────────────────┐
-                │   Next.js Frontend   │
-                │   Vercel Hosted UI   │
-                └──────────┬───────────┘
-                           │ REST API
-                           ▼
-                ┌──────────────────────┐
-                │   FastAPI Backend    │
-                │   Render Hosted API  │
-                └──────────┬───────────┘
-                           │
-        ┌──────────────────┼──────────────────┐
-        ▼                  ▼                  ▼
-┌───────────────┐  ┌────────────────┐  ┌────────────────────┐
-│ JD Parser     │  │ Match Engine   │  │ Interest Engine    │
-│ Skills        │  │ Skill overlap  │  │ Persona signals    │
-│ Experience    │  │ Experience fit │  │ Intent scoring     │
-│ Role signals  │  │ Role relevance │  │ Reply simulation   │
-└──────┬────────┘  └──────┬─────────┘  └──────────┬─────────┘
-       │                  │                       │
-       └────────────┬─────┴──────────────┬────────┘
-                    ▼                    ▼
-             ┌──────────────────────────────────┐
-             │      Ranking & Prioritization    │
-             │ Final Score = 70% Match         │
-             │             + 30% Interest      │
-             └──────────────┬──────────────────┘
-                            ▼
-             ┌──────────────────────────────────┐
-             │ Ranked Shortlist Output          │
-             │ Hot Lead / Strong Fit / Consider │
-             │ Outreach Msg + Candidate Reply   │
-             └──────────────────────────────────┘
+```mermaid
+flowchart TD
 
-Data Source:
-JSON Candidate Dataset (20+ profiles)
+A[Recruiter Inputs Job Description] --> B[Next.js Frontend UI<br/>Hosted on Vercel]
+
+B --> C[FastAPI Backend API<br/>Hosted on Render]
+
+C --> D[JD Parser]
+C --> E[Match Engine]
+C --> F[Interest Engine]
+
+D --> G[Extract Skills / Experience / Role]
+E --> H[Skill Overlap / Experience Fit / Role Relevance]
+F --> I[Persona Signals / Intent Score / Reply Simulation]
+
+G --> J[Ranking Engine]
+H --> J
+I --> J
+
+J --> K[Final Score = 70% Match + 30% Interest]
+
+K --> L[Ranked Shortlist Output]
+
+L --> M[Hot Lead / Strong Fit / Consider]
+L --> N[AI Outreach Message]
+L --> O[Candidate Reply Simulation]
+
+P[Candidate Dataset JSON] --> C
 
 # 🏆 Core Output
 
