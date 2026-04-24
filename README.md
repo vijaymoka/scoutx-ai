@@ -154,7 +154,7 @@ Instead of reviewing **100 profiles manually**, ScoutX instantly surfaces the **
 
 | Service | URL |
 |---------|-----|
-| 🌐 Frontend App | *(Paste Vercel URL here)* |
+| 🌐 Frontend App | *https://scoutx-frontend.vercel.app/* |
 | ⚙️ Backend API | [https://scoutx-ai.onrender.com](https://scoutx-ai.onrender.com) |
 
 ---
