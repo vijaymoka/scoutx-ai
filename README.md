@@ -170,7 +170,7 @@ Instead of reviewing **100 profiles manually**, ScoutX instantly surfaces the **
 
 ## 📹 Demo Video
 
-*(Add Loom / YouTube link here)*
+*https://youtu.be/y-KZGhdR93Y*
 
 ---
 
